@@ -5,3 +5,5 @@ window.QB_CONFIG = {
   BUCKET: "content",
   DEMO_BASE: "../"           // demo mode: where app_data/ and snippets/ live relative to this page
 };
+// Local development: run in demo mode (progress in this browser only, content from ../app_data and ../snippets).
+if (/^(localhost|127\.)/.test(location.hostname)) window.QB_CONFIG.SUPABASE_URL = "";

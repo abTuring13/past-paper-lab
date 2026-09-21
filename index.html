@@ -19,7 +19,7 @@
       <button class="btn primary big" id="au-submit" type="submit">Sign in</button>
       <p class="err" id="au-err" role="alert"></p>
     </form>
-    <p class="muted small"><a href="#" id="au-toggle">New here? Create an account</a></p>
+    <p class="muted small" style="display:flex;gap:14px;flex-wrap:wrap"><a href="#" id="au-toggle">New here? Create an account</a><a href="#" id="au-forgot">Forgot password?</a></p>
     <p class="muted small">Beta. We store your email, your progress and anonymous usage events to improve the app. <a href="#" id="au-privacy">Details</a></p>
   </div>
 </div>
@@ -28,9 +28,10 @@
   <header class="top">
     <div class="brand"><span class="logo" aria-hidden="true"></span><span class="brand-t">Past Paper Lab</span></div>
     <button class="course" id="coursebtn" aria-haspopup="dialog"><span id="courselbl">Physics HL</span><span aria-hidden="true">▾</span></button>
+    <button class="xp" id="xp" title="Your progress"><span class="xp-l" id="xp-l">Lv 1</span><span class="xp-bar"><i id="xp-i"></i></span><span class="xp-t" id="xp-t">0 XP</span></button>
     <div class="timer" id="timer" aria-live="off"><span class="tl" id="tlbl">Timer</span><b id="tval">00:00</b><button class="ib" id="tgo" title="Start or pause">▶</button><button class="ib" id="trs" title="Reset">↺</button></div>
     <nav class="nav" id="nav">
-      <button data-v="home" class="on">Home</button><button data-v="practice">Practice</button><button data-v="syllabus">Syllabus</button><button data-v="insights">Insights</button><button data-v="account">Account</button>
+      <button data-v="home" class="on">Home</button><button data-v="practice">Practice</button><button data-v="progress">Progress</button><button data-v="account">Account</button>
     </nav>
   </header>
   <main id="view"></main>
@@ -38,6 +39,11 @@
 
 <dialog id="coursedlg"><h3>Choose your course</h3><div class="tiles" id="tiles"></div><button class="btn" id="courseclose">Close</button></dialog>
 <dialog id="focus" class="focus"></dialog>
+<dialog id="builder"><h3>Build a practice set</h3><p class="muted small">A fresh mix of questions you have not done yet, with one countdown for the whole set.</p>
+  <div class="field"><span class="flabel">Length</span><div class="seg" id="b-len"><button data-v="20">20 min</button><button data-v="45" class="on">45 min</button><button data-v="90">90 min</button></div></div>
+  <div class="field"><span class="flabel">Question types</span><div class="seg" id="b-type"><button data-v="" class="on">Mixed</button><button data-v="mcq">Multiple choice</button><button data-v="structured">Written</button></div></div>
+  <div class="field"><span class="flabel">Units</span><div class="chipset" id="b-units"></div></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" id="b-cancel">Cancel</button><button class="btn primary" id="b-go">Start</button></div></dialog>
 <dialog id="infodlg"><div id="infobody"></div><button class="btn" id="infoclose">Close</button></dialog>
 <div id="toast" class="toast" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
