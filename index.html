@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Past Paper Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<div id="auth" class="auth" hidden>
+  <div class="auth-card">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Past Paper Lab</div>
+    <h1>Practise real IB exam questions, topic by topic.</h1>
+    <p class="muted">Physics and Mathematics. Instant marking for multiple choice, markschemes for everything else, and a map of what you have already mastered.</p>
+    <form id="authform" autocomplete="on">
+      <label for="au-name" id="au-name-l" hidden>Your name<input id="au-name" type="text" autocomplete="name" placeholder="e.g. Maja"></label>
+      <label for="au-email">Email<input id="au-email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+      <label for="au-pass">Password<input id="au-pass" type="password" required minlength="6" autocomplete="current-password" placeholder="at least 6 characters"></label>
+      <button class="btn primary big" id="au-submit" type="submit">Sign in</button>
+      <p class="err" id="au-err" role="alert"></p>
+    </form>
+    <p class="muted small"><a href="#" id="au-toggle">New here? Create an account</a></p>
+    <p class="muted small">Beta. We store your email, your progress and anonymous usage events to improve the app. <a href="#" id="au-privacy">Details</a></p>
+  </div>
+</div>
+
+<div id="shell" hidden>
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true"></span><span class="brand-t">Past Paper Lab</span></div>
+    <button class="course" id="coursebtn" aria-haspopup="dialog"><span id="courselbl">Physics HL</span><span aria-hidden="true">▾</span></button>
+    <div class="timer" id="timer" aria-live="off"><span class="tl" id="tlbl">Timer</span><b id="tval">00:00</b><button class="ib" id="tgo" title="Start or pause">▶</button><button class="ib" id="trs" title="Reset">↺</button></div>
+    <nav class="nav" id="nav">
+      <button data-v="home" class="on">Home</button><button data-v="practice">Practice</button><button data-v="syllabus">Syllabus</button><button data-v="insights">Insights</button><button data-v="account">Account</button>
+    </nav>
+  </header>
+  <main id="view"></main>
+</div>
+
+<dialog id="coursedlg"><h3>Choose your course</h3><div class="tiles" id="tiles"></div><button class="btn" id="courseclose">Close</button></dialog>
+<dialog id="focus" class="focus"></dialog>
+<dialog id="infodlg"><div id="infobody"></div><button class="btn" id="infoclose">Close</button></dialog>
+<div id="toast" class="toast" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body></html>
