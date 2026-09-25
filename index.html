@@ -8,15 +8,26 @@
 <link rel="stylesheet" href="styles.css">
 </head><body>
 <div id="auth" class="auth" hidden>
-  <div class="auth-card">
+  <section class="auth-hero">
+    <i class="auth-orb" aria-hidden="true"></i>
     <div class="brand"><span class="logo" aria-hidden="true"></span>Past Paper Lab</div>
+    <button type="button" class="glow-btn" id="au-new"><span class="glow-c"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>What's new</span><span class="glow glow-o" aria-hidden="true"></span><span class="glow glow-b" aria-hidden="true"></span></button>
     <h1>Practise real IB exam questions, topic by topic.</h1>
-    <p class="muted">Physics and Mathematics. Instant marking for multiple choice, markschemes for everything else, and a map of what you have already mastered.</p>
+    <p class="muted lead">Physics and Mathematics. Instant marking for multiple choice, markschemes for everything else, and a map of what you have already mastered.</p>
+    <ul class="auth-points">
+      <li><b>Past papers, sorted by topic</b><span>Pick a topic and work through every question the IB has asked on it.</span></li>
+      <li><b>Markschemes that explain themselves</b><span>Tap any markscheme line to see how it was obtained, then ask a follow-up.</span></li>
+      <li><b>Progress you can see</b><span>Timed practice sets, points, and the topics worth another look.</span></li>
+    </ul>
+    <p class="muted small">Maths AA · Maths AI · Physics — SL and HL</p>
+  </section>
+  <div class="auth-card">
+    <h2 id="au-title">Sign in</h2>
     <form id="authform" autocomplete="on">
       <label for="au-name" id="au-name-l" hidden>Your name<input id="au-name" type="text" autocomplete="name" placeholder="e.g. Maja"></label>
       <label for="au-email">Email<input id="au-email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
       <label for="au-pass">Password<input id="au-pass" type="password" required minlength="6" autocomplete="current-password" placeholder="at least 6 characters"></label>
-      <button class="btn primary big" id="au-submit" type="submit">Sign in</button>
+      <button class="btn primary big glow-btn" id="au-submit" type="submit">Sign in</button>
       <p class="err" id="au-err" role="alert"></p>
     </form>
     <p class="muted small" style="display:flex;gap:14px;flex-wrap:wrap"><a href="#" id="au-toggle">New here? Create an account</a><a href="#" id="au-forgot">Forgot password?</a></p>

@@ -80,9 +80,13 @@ $("xp").onclick = () => { const P = progress(), tot = S.data ? S.data.questions.
 /* ---------------- auth ---------------- */
 let signup = false;
 function showAuth() { $("auth").hidden = false; $("shell").hidden = true }
-$("au-toggle").onclick = e => { e.preventDefault(); signup = !signup; $("au-name-l").hidden = !signup; $("au-submit").textContent = signup ? "Create account" : "Sign in"; $("au-toggle").textContent = signup ? "Already have an account? Sign in" : "New here? Create an account"; $("au-pass").autocomplete = signup ? "new-password" : "current-password" };
+$("au-toggle").onclick = e => { e.preventDefault(); signup = !signup; $("au-name-l").hidden = !signup; $("au-submit").textContent = $("au-title").textContent = signup ? "Create account" : "Sign in"; $("au-toggle").textContent = signup ? "Already have an account? Sign in" : "New here? Create an account"; $("au-pass").autocomplete = signup ? "new-password" : "current-password" };
 $("au-forgot").onclick = async e => { e.preventDefault(); const email = $("au-email").value.trim(); if (!email) { $("au-err").textContent = "Type your email above first, then click “Forgot password?”."; return } if (DEMO) return toast("Not available in demo mode");
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); $("au-err").textContent = error ? error.message : "If that email has an account, a reset link is on its way." };
+// Pointer-following glow on .glow-btn (login page): --glow-x tracks the pointer across the button.
+document.addEventListener("pointermove", e => { const b = e.target.closest?.(".glow-btn"); if (!b) return; const r = b.getBoundingClientRect(); b.style.setProperty("--glow-x", Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)) + "%") });
+document.addEventListener("pointerout", e => { const b = e.target.closest?.(".glow-btn"); if (b && !b.contains(e.relatedTarget)) b.style.setProperty("--glow-x", "50%") });
+$("au-new").onclick = () => info(`<h3>What's new</h3><ul class="newlist"><li><b>Explain this to me.</b> Ask about any markscheme, tap a single line to see how it was obtained, and ask follow-ups.</li><li><b>Practice sets.</b> 20, 45 or 90 minutes of fresh questions with one countdown and a score at the end.</li><li><b>Progress.</b> Your course, topic by topic, with the topics the IB examines most.</li><li><b>More like this.</b> One tap after any question opens similar ones.</li><li><b>Points and levels</b> for every question you finish.</li></ul>`);
 $("au-privacy").onclick = e => { e.preventDefault(); info(`<h3>What we store</h3><p>Your email and display name (to sign you in), the questions you complete with your answers, self-awarded marks and time, feedback you choose to send, and usage events such as which screens and filters you use. We use this only to show your progress and to improve the app. No advertising, no third-party trackers. You can reset your progress from the Account screen or ask us to remove your account at any time.</p>`) };
 $("authform").onsubmit = async e => {
   e.preventDefault(); $("au-err").textContent = ""; const email = $("au-email").value.trim(), password = $("au-pass").value, name = $("au-name").value.trim();
@@ -235,11 +239,13 @@ async function answerMcq(q, l, scope, seconds) {
 async function showMs(q, scope, seconds) {
   const box = scope.querySelector(".msbox"); if (!q.ms) return; if (box.innerHTML) { box.innerHTML = ""; return } track("ms_reveal", { q: q.id });
   const [u] = await imageUrls([q.ms]); const half = Math.round(q.m / 2);
-  box.innerHTML = `<div class="qimg ms"><img src="${u}" alt="Markscheme"></div>${CFG.EXPLAIN_FN ? `<div class="qact" style="margin-top:10px"><input type="text" class="ex-note" id="exn-${esc(q.id)}" placeholder="Optional: what confuses you?" style="flex:1;min-width:180px"><button class="btn" data-ex="1">Explain this to me</button></div><div class="exout"></div>` : ""}
+  box.innerHTML = `<div class="qimg ms${CFG.EXPLAIN_FN ? " tapms" : ""}"><img src="${u}" alt="Markscheme"><i class="tapmark" hidden></i></div>${CFG.EXPLAIN_FN ? `<p class="muted small taphint">Tap any line of the markscheme to see how it was obtained.</p><div class="exchat" aria-live="polite"></div><div class="qact" style="margin-top:10px"><input type="text" class="ex-note" id="exn-${esc(q.id)}" aria-label="Your question" placeholder="What confuses you? (optional)" style="flex:1;min-width:180px"><button class="btn" data-ex="1">Explain this to me</button></div>` : ""}
   <div class="selfmark" style="margin-top:10px"><label for="sm-${esc(q.id)}" style="display:contents"><span>How many marks would you give yourself?</span><input id="sm-${esc(q.id)}" type="range" min="0" max="${q.m}" value="${half}" step="1"></label><b class="mono"><span class="smv">${half}</span>/${q.m}</b><button class="btn good" data-done="1">Mark as complete</button></div>`;
   const rng = box.querySelector("input[type=range]"); rng.oninput = () => box.querySelector(".smv").textContent = rng.value;
   box.querySelector("[data-done]").onclick = async ev => { ev.target.disabled = true; await saveAttempt({ question_id: q.id, self_marks: +rng.value, max_marks: q.m, seconds: scope._sec ? scope._sec() : Math.min(seconds, 3600) }); toast("Done  +" + (+rng.value / q.m >= .7 ? 15 : 10) + " XP"); scope.classList.add("done"); box.querySelector(".selfmark").remove(); afterDone(q, scope) };
-  const ex = box.querySelector("[data-ex]"); if (ex) ex.onclick = () => explain(q, box);
+  const ex = box.querySelector("[data-ex]"); if (ex) { const inp = box.querySelector(".ex-note"); box._turns = [];
+    ex.onclick = () => explain(q, box, inp.value); inp.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); ex.click() } };
+    box.querySelector(".tapms").onclick = e => tapLine(q, box, e) }
 }
 let katexP;
 function renderMath(el) { // KaTeX loaded on first use; math is rendered from text nodes, so model output is never parsed as HTML
@@ -247,10 +253,31 @@ function renderMath(el) { // KaTeX loaded on first use; math is rendered from te
     add("link", { rel: "stylesheet", href: K + "katex.min.css" }); add("script", { src: K + "katex.min.js", onerror: no, onload: () => add("script", { src: K + "contrib/auto-render.min.js", onload: ok, onerror: no }) }) });
   return katexP.then(() => renderMathInElement(el, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false }, { left: "\\[", right: "\\]", display: true }], throwOnError: false })).catch(() => {});
 }
-async function explain(q, box) {
-  const out = box.querySelector(".exout"), btn = box.querySelector("[data-ex]"); btn.disabled = true; out.innerHTML = `<div class="explain muted">Thinking…</div>`; track("explain_request", { q: q.id });
-  try { const { data, error } = await sb.functions.invoke(CFG.EXPLAIN_FN, { body: { course: S.course, img: q.img, ms: q.ms, marks: q.m, note: box.querySelector(".ex-note").value.slice(0, 300) } }); if (error) throw error; if (data.error) throw new Error(data.error); out.innerHTML = `<div class="explain"></div>`; const div = out.firstChild; div.textContent = data.text; await renderMath(div) }
-  catch (e) { out.innerHTML = `<div class="explain">${esc(/limit/i.test(e.message) ? "You have used today's explanations. They reset tomorrow." : "Could not get an explanation right now. Try again in a moment.")}</div>` } btn.disabled = false;
+// One conversation per open markscheme: box._turns holds {role, text}; box._line is the cropped line image (data URL) it started from, if any.
+async function explain(q, box, text, line) {
+  const chat = box.querySelector(".exchat"), btn = box.querySelector("[data-ex]"), inp = box.querySelector(".ex-note"); if (btn.disabled) return;
+  text = String(text || "").trim().slice(0, 300); if (!text && box._turns.length) return inp.focus();
+  if (line || !box._turns.length) { box._turns = []; box._line = line?.src || null; chat.innerHTML = "" } // tapping a line starts a new thread
+  box._turns.push({ role: "user", text: text || (line ? line.ask : "") });
+  if (line || text) { const me = document.createElement("div"); me.className = "exq"; if (line) me.innerHTML = `<img src="${line.src}" alt="The markscheme line you tapped">`; me.append(text || line.ask); chat.append(me) }
+  const ans = document.createElement("div"); ans.className = "explain muted"; ans.textContent = "Thinking…"; chat.append(ans); btn.disabled = true; inp.value = "";
+  track("explain_request", { q: q.id, turn: box._turns.length, line: !!line });
+  try { const { data, error } = await sb.functions.invoke(CFG.EXPLAIN_FN, { body: { course: S.course, img: q.img, ms: q.ms, marks: q.m, turns: box._turns, line: box._line || undefined } }); if (error) throw error; if (data.error) throw new Error(data.error);
+    ans.className = "explain"; ans.textContent = data.text; box._turns.push({ role: "assistant", text: data.text }); await renderMath(ans);
+    btn.textContent = "Ask"; inp.placeholder = "Ask a follow-up…" }
+  catch (e) { box._turns.pop(); ans.textContent = /limit/i.test(e.message) ? "You have used today's explanations. They reset tomorrow." : "Could not get an explanation right now. Try again in a moment." }
+  btn.disabled = false;
+}
+async function tapLine(q, box, e) {
+  const wrap = e.currentTarget, img = wrap.querySelector("img"), r = img.getBoundingClientRect(); if (e.clientY > r.bottom || e.clientX > r.right || box.querySelector("[data-ex]").disabled) return;
+  const fy = (e.clientY - r.top) / r.height, mark = wrap.querySelector(".tapmark"), ask = "How was this line obtained?";
+  try {
+    box._bmp ??= fetch(img.src, { cache: "no-store" }).then(x => x.blob()).then(createImageBitmap); // fetched again with CORS so the canvas is not tainted
+    const bmp = await box._bmp, half = 40, y0 = Math.max(0, Math.round(fy * bmp.height) - half), h = Math.min(2 * half, bmp.height - y0);
+    const c = Object.assign(document.createElement("canvas"), { width: bmp.width, height: h }); c.getContext("2d").drawImage(bmp, 0, y0, bmp.width, h, 0, 0, bmp.width, h);
+    Object.assign(mark.style, { top: y0 / bmp.height * r.height + "px", height: h / bmp.height * r.height + "px", width: r.width + "px" }); mark.hidden = false;
+    explain(q, box, "", { src: c.toDataURL("image/png"), ask });
+  } catch { explain(q, box, `${ask} (the line about ${Math.round(fy * 100)}% of the way down the markscheme)`) }
 }
 function afterDone(q, scope) {
   const box = scope.querySelector(".afterbox"); if (!box) return; const askFb = S.sessionDone % 3 === 0 && S.fbAsked < 3 && !S.set;
