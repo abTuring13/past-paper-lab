@@ -241,9 +241,15 @@ async function showMs(q, scope, seconds) {
   box.querySelector("[data-done]").onclick = async ev => { ev.target.disabled = true; await saveAttempt({ question_id: q.id, self_marks: +rng.value, max_marks: q.m, seconds: scope._sec ? scope._sec() : Math.min(seconds, 3600) }); toast("Done  +" + (+rng.value / q.m >= .7 ? 15 : 10) + " XP"); scope.classList.add("done"); box.querySelector(".selfmark").remove(); afterDone(q, scope) };
   const ex = box.querySelector("[data-ex]"); if (ex) ex.onclick = () => explain(q, box);
 }
+let katexP;
+function renderMath(el) { // KaTeX loaded on first use; math is rendered from text nodes, so model output is never parsed as HTML
+  katexP ??= new Promise((ok, no) => { const add = (tag, attrs) => Object.assign(document.head.appendChild(document.createElement(tag)), attrs), K = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/";
+    add("link", { rel: "stylesheet", href: K + "katex.min.css" }); add("script", { src: K + "katex.min.js", onerror: no, onload: () => add("script", { src: K + "contrib/auto-render.min.js", onload: ok, onerror: no }) }) });
+  return katexP.then(() => renderMathInElement(el, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false }, { left: "\\[", right: "\\]", display: true }], throwOnError: false })).catch(() => {});
+}
 async function explain(q, box) {
   const out = box.querySelector(".exout"), btn = box.querySelector("[data-ex]"); btn.disabled = true; out.innerHTML = `<div class="explain muted">Thinking…</div>`; track("explain_request", { q: q.id });
-  try { const { data, error } = await sb.functions.invoke(CFG.EXPLAIN_FN, { body: { course: S.course, img: q.img, ms: q.ms, marks: q.m, note: box.querySelector(".ex-note").value.slice(0, 300) } }); if (error) throw error; if (data.error) throw new Error(data.error); out.innerHTML = `<div class="explain">${esc(data.text)}</div><p class="muted small">AI explanation — it can be wrong; the markscheme is the authority. ${data.left ?? ""} left today.</p>` }
+  try { const { data, error } = await sb.functions.invoke(CFG.EXPLAIN_FN, { body: { course: S.course, img: q.img, ms: q.ms, marks: q.m, note: box.querySelector(".ex-note").value.slice(0, 300) } }); if (error) throw error; if (data.error) throw new Error(data.error); out.innerHTML = `<div class="explain"></div>`; const div = out.firstChild; div.textContent = data.text; await renderMath(div) }
   catch (e) { out.innerHTML = `<div class="explain">${esc(/limit/i.test(e.message) ? "You have used today's explanations. They reset tomorrow." : "Could not get an explanation right now. Try again in a moment.")}</div>` } btn.disabled = false;
 }
 function afterDone(q, scope) {
