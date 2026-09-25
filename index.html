@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" data-theme="dark"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Past Paper Lab</title>
@@ -19,7 +19,6 @@
       <li><b>Markschemes that explain themselves</b><span>Tap any markscheme line to see how it was obtained, then ask a follow-up.</span></li>
       <li><b>Progress you can see</b><span>Timed practice sets, points, and the topics worth another look.</span></li>
     </ul>
-    <p class="muted small">Maths AA · Maths AI · Physics — SL and HL</p>
   </section>
   <div class="auth-card">
     <h2 id="au-title">Sign in</h2>
@@ -42,8 +41,20 @@
     <button class="xp" id="xp" title="Your progress"><span class="xp-l" id="xp-l">Lv 1</span><span class="xp-bar"><i id="xp-i"></i></span><span class="xp-t" id="xp-t">0 XP</span></button>
     <div class="timer" id="timer" aria-live="off"><span class="tl" id="tlbl">Timer</span><b id="tval">00:00</b><button class="ib" id="tgo" title="Start or pause">▶</button><button class="ib" id="trs" title="Reset">↺</button></div>
     <nav class="nav" id="nav">
-      <button data-v="home" class="on">Home</button><button data-v="practice">Practice</button><button data-v="progress">Progress</button><button data-v="account">Account</button>
+      <button data-v="home" class="on">Home</button><button data-v="practice">Practice</button><button data-v="progress">Progress</button>
     </nav>
+    <div class="acct">
+      <button class="acct-btn" id="acctbtn" aria-haspopup="menu" aria-expanded="false" aria-controls="acctmenu"><span class="avatar" id="acct-av" aria-hidden="true"></span><span class="acct-n" id="acct-n">Account</span><span aria-hidden="true">▾</span></button>
+      <div class="acct-menu" id="acctmenu" role="menu" hidden>
+        <div class="acct-h"><b id="acct-name"></b><span class="muted small" id="acct-email"></span></div>
+        <button role="menuitem" data-a="activity">Your activity</button>
+        <button role="menuitem" data-a="theme" id="acct-theme">Light mode</button>
+        <button role="menuitem" data-a="fb">Send feedback</button>
+        <button role="menuitem" data-a="wipe">Start over (reset progress)</button>
+        <hr>
+        <button role="menuitem" data-a="out" class="bad">Sign out</button>
+      </div>
+    </div>
   </header>
   <main id="view"></main>
 </div>

@@ -100,7 +100,7 @@ async function boot() {
   if (DEMO) { S.user = S.user || ls.get("qb_demo_user", null); S.fb = ls.get("qb_fb", 0) }
   else { const { data } = await sb.auth.getSession(); const u = data.session?.user; S.user = u ? { id: u.id, email: u.email, name: u.user_metadata?.display_name || u.email.split("@")[0] } : null; S.fb = u?.user_metadata?.fb_count || 0 }
   if (!S.user) return showAuth();
-  $("auth").hidden = true; $("shell").hidden = false;
+  $("auth").hidden = true; $("shell").hidden = false; drawAcct();
   S.course = ls.get("qb_course", null); track("session_start", { ua: navigator.userAgent.slice(0, 120), w: innerWidth, h: innerHeight, demo: DEMO });
   try { S.attempts = await loadAttempts() } catch (e) { toast("Could not load your progress") } drawXp();
   if (!S.course) openCourses(); else await setCourse(S.course);
@@ -337,13 +337,25 @@ function vProgress() {
 /* ---------------- ACCOUNT ---------------- */
 function vAccount() {
   const a = S.attempts.filter(x => x.status === "completed").slice(-15).reverse();
-  $("view").innerHTML = `<section class="panel"><h2>${esc(S.user.name)}</h2><p class="muted">${esc(S.user.email || "")}${DEMO ? " · demo mode: progress is stored in this browser only" : ""}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="a-theme">Switch light / dark</button><button class="btn" id="a-fb">Send feedback</button><button class="btn" id="a-out">Sign out</button><button class="btn" id="a-wipe">Start over (reset my progress)</button></div></section>
+  $("view").innerHTML = `<section class="panel"><h2>${esc(S.user.name)}</h2><p class="muted">${esc(S.user.email || "")}${DEMO ? " · demo mode: progress is stored in this browser only" : ""}</p></section>
   <section class="panel"><h2>Recent activity</h2>${a.length ? `<div class="tw"><table><thead><tr><th>When</th><th>Question</th><th>Result</th><th>Time</th></tr></thead><tbody>${a.map(x => `<tr><td>${esc((x.created_at || "").slice(0, 16).replace("T", " "))}</td><td class="mono">${esc(x.question_id)}</td><td>${x.correct === true ? "✓" : x.correct === false ? "✗ " + esc(x.chosen) : (x.self_marks ?? "–") + "/" + (x.max_marks ?? "")}</td><td class="mono">${fmtTime(x.seconds || 0)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">Nothing yet.</p>`}</section>`;
-  $("a-theme").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); const nx = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = nx; ls.set("qb_theme", nx) };
-  $("a-fb").onclick = () => { const t = prompt("What should we fix or add?"); if (t && t.trim()) { track("feedback", { rating: "free", text: t.trim().slice(0, 1000) }); S.fb++; if (DEMO) ls.set("qb_fb", S.fb); else sb.auth.updateUser({ data: { fb_count: S.fb } }); drawXp(); toast("Thank you  +15 XP") } };
-  $("a-out").onclick = async () => { await flush(); if (DEMO) { localStorage.removeItem("qb_demo_user"); S.user = null; showAuth() } else await sb.auth.signOut() };
-  $("a-wipe").onclick = async () => { if (!confirm("Reset all your progress and saved questions? Every question will show up again. This cannot be undone.")) return; if (DEMO) ls.set("qb_attempts", []); else { const { error } = await sb.from("attempts").delete().eq("user_id", S.user.id); if (error) return toast(error.message) } S.attempts = []; track("reset_progress"); drawXp(); toast("Fresh start"); go("home") };
 }
-const th = ls.get("qb_theme", null); if (th) document.documentElement.dataset.theme = th;
+/* account menu (top right) */
+function drawAcct() { $("acct-av").textContent = (S.user.name || "?").trim()[0].toUpperCase(); $("acct-n").textContent = $("acct-name").textContent = S.user.name; $("acct-email").textContent = S.user.email || ""; $("acct-theme").textContent = document.documentElement.dataset.theme === "light" ? "Dark mode" : "Light mode" }
+function acctMenu(open) { $("acctmenu").hidden = !open; $("acctbtn").setAttribute("aria-expanded", open) }
+$("acctbtn").onclick = () => acctMenu($("acctmenu").hidden);
+document.addEventListener("click", e => { if (!e.target.closest(".acct")) acctMenu(false) });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("acctmenu").hidden) { acctMenu(false); $("acctbtn").focus() } });
+$("acctmenu").onclick = async e => {
+  const b = e.target.closest("[data-a]"); if (!b) return; acctMenu(false);
+  ({
+    activity: () => go("account"),
+    theme: () => { const nx = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = nx; ls.set("qb_theme", nx); drawAcct() },
+    fb: () => { const t = prompt("What should we fix or add?"); if (t && t.trim()) { track("feedback", { rating: "free", text: t.trim().slice(0, 1000) }); S.fb++; if (DEMO) ls.set("qb_fb", S.fb); else sb.auth.updateUser({ data: { fb_count: S.fb } }); drawXp(); toast("Thank you  +15 XP") } },
+    out: async () => { await flush(); if (DEMO) { localStorage.removeItem("qb_demo_user"); S.user = null; showAuth() } else await sb.auth.signOut() },
+    wipe: async () => { if (!confirm("Reset all your progress and saved questions? Every question will show up again. This cannot be undone.")) return; if (DEMO) ls.set("qb_attempts", []); else { const { error } = await sb.from("attempts").delete().eq("user_id", S.user.id); if (error) return toast(error.message) } S.attempts = []; track("reset_progress"); drawXp(); toast("Fresh start"); go("home") },
+  })[b.dataset.a]();
+};
+document.documentElement.dataset.theme = ls.get("qb_theme", null) || "dark"; // dark unless the student chose light
 boot();
 })();
