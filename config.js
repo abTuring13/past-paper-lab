@@ -7,4 +7,5 @@ window.QB_CONFIG = {
   DEMO_BASE: "../"           // demo mode: where app_data/ and snippets/ live relative to this page
 };
 // Local development: run in demo mode (progress in this browser only, content from ../app_data and ../snippets).
-if (/^(localhost|127\.)/.test(location.hostname)) window.QB_CONFIG.SUPABASE_URL = "";
+// Add ?live to the URL to use the real backend locally (scripts/screenshot/app_screenshot.mjs does this).
+if (/^(localhost|127\.)/.test(location.hostname) && !/[?&]live\b/.test(location.search)) window.QB_CONFIG.SUPABASE_URL = "";
